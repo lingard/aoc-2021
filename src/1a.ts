@@ -2,6 +2,7 @@ import { pipe } from 'fp-ts/lib/function'
 import * as RA from 'fp-ts/ReadonlyArray'
 import * as TE from 'fp-ts/TaskEither'
 import * as E from 'fp-ts/Either'
+import * as n from 'fp-ts/number'
 import * as D from 'io-ts/Decoder'
 
 import { AppError, NumberFromString, readFile } from './util'
@@ -29,8 +30,7 @@ export const readInput = <A>(path: string, decoder: D.Decoder<unknown, A>) =>
 export const increases = (as: ReadonlyArray<number>) =>
   pipe(
     RA.zip(as, pipe(as, RA.dropLeft(1))),
-    RA.map(([a, b]) => b > a),
-    RA.reduce(0, (b, a) => (a ? b + 1 : b))
+    RA.foldMap(n.MonoidSum)(([a, b]) => (b > a ? 1 : 0))
   )
 
 export const main = pipe(readInput('input/1', Input), TE.map(increases))
