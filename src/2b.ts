@@ -2,7 +2,7 @@ import { pipe, constant } from 'fp-ts/function'
 import * as TE from 'fp-ts/TaskEither'
 import * as RA from 'fp-ts/ReadonlyArray'
 import * as Lens from 'monocle-ts/Lens'
-import { readInput } from './1a'
+import { readInput } from './util'
 import { Command, Input, Position as P } from './2a'
 
 interface Position extends P {

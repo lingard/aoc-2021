@@ -1,19 +1,30 @@
 import fs from 'fs'
 import * as TE from 'fp-ts/TaskEither'
 import * as E from 'fp-ts/Either'
-import * as IO from 'fp-ts/IO'
+import * as D from 'io-ts/Decoder'
 import { pipe } from 'fp-ts/function'
 import { Union, of } from 'ts-union'
 import * as console from 'fp-ts/Console'
-import * as D from 'io-ts/Decoder'
 
 export function readFile(filename: string): TE.TaskEither<Error, string> {
   return TE.tryCatch(() => fs.promises.readFile(filename, 'utf8'), E.toError)
 }
 
-export function exit(code: number): IO.IO<never> {
-  return () => process.exit(code)
-}
+export const parseInput =
+  <A>(decoder: D.Decoder<unknown, A>) =>
+  (input: string) =>
+    pipe(
+      input.split('\n'),
+      decoder.decode,
+      E.mapLeft(AppError.ValidationErrors)
+    )
+
+export const readInput = <A>(path: string, decoder: D.Decoder<unknown, A>) =>
+  pipe(
+    readFile(path),
+    TE.mapLeft(AppError.FSError),
+    TE.chainEitherK(parseInput(decoder))
+  )
 
 export const NumberFromString = pipe(
   D.string,
@@ -42,21 +53,8 @@ export function formatError(error: AppError): string {
 
 export const run = (ma: TE.TaskEither<AppError, unknown>) => ma()
 
-export const main = (ma: TE.TaskEither<AppError, unknown>) =>
-  ma().then(
-    E.fold(
-      (err) => {
-        console.error(err)
-        process.exit(1)
-      },
-      (result) => {
-        console.log(result)
-        process.exit(0)
-      }
-    )
+export const trace = <E, A>(fa: TE.TaskEither<E, A>) =>
+  pipe(
+    fa,
+    TE.chainFirstIOK((a) => console.log(a))
   )
-
-export function spy<A>(a: A): A {
-  console.log(a)()
-  return a
-}

@@ -5,7 +5,8 @@ import * as M from 'fp-ts/Monoid'
 import * as n from 'fp-ts/number'
 import * as b from 'fp-ts/boolean'
 
-import { increases, Input, readInput } from './1a'
+import { increases, Input } from './1a'
+import { readInput } from './util'
 
 const chopN = (n: number) => (ns: ReadonlyArray<number>) =>
   pipe(

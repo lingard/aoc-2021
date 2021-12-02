@@ -8,8 +8,7 @@ import * as Lens from 'monocle-ts/Lens'
 import * as M from 'fp-ts/Monoid'
 import * as n from 'fp-ts/number'
 import { getStructMonoid } from 'fp-ts/lib/Monoid'
-import { readInput } from './1a'
-import { NumberFromString } from './util'
+import { NumberFromString, readInput } from './util'
 
 export const Command = Union({
   forward: of<number>(),
