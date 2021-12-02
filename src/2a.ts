@@ -1,9 +1,13 @@
-import { pipe, constant } from 'fp-ts/function'
+import { pipe } from 'fp-ts/function'
 import * as TE from 'fp-ts/TaskEither'
+import * as T from 'fp-ts/Task'
 import * as RA from 'fp-ts/ReadonlyArray'
 import { Union, of } from 'ts-union'
 import * as D from 'io-ts/Decoder'
 import * as Lens from 'monocle-ts/Lens'
+import * as M from 'fp-ts/Monoid'
+import * as n from 'fp-ts/number'
+import { getStructMonoid } from 'fp-ts/lib/Monoid'
 import { readInput } from './1a'
 import { NumberFromString } from './util'
 
@@ -59,6 +63,8 @@ export const CommandFromString = pipe(
 
 export const Input = D.array(CommandFromString)
 
+const sumPosition = ({ horizontal, depth }: Position) => horizontal * depth
+
 const reducer = (position: Position, command: Command): Position =>
   pipe(
     command,
@@ -69,17 +75,60 @@ const reducer = (position: Position, command: Command): Position =>
         pipe(position, depthPositionLens.set(position.depth - steps)),
       down: (steps) =>
         pipe(position, depthPositionLens.set(position.depth + steps)),
-      default: constant(position),
     })
   )
 
 export const main = pipe(
   readInput('input/2', Input),
   TE.map((commands) =>
+    pipe(commands, RA.reduce(emptyPosition, reducer), sumPosition)
+  )
+)
+
+// -------------------------------------------------------------------------------------
+// monoid version
+// -------------------------------------------------------------------------------------
+
+const monoidPosition = getStructMonoid<Position>({
+  depth: n.MonoidSum,
+  horizontal: n.MonoidSum,
+})
+
+const positionFromCommand = (command: Command): Position =>
+  pipe(
+    command,
+    Command.match({
+      forward: (steps) =>
+        pipe(monoidPosition.empty, horizontalPositionLens.set(steps)),
+      up: (steps) => pipe(monoidPosition.empty, depthPositionLens.set(-steps)),
+      down: (steps) => pipe(monoidPosition.empty, depthPositionLens.set(steps)),
+    })
+  )
+
+export const main2 = pipe(
+  readInput('input/2', Input),
+  TE.map((commands) =>
     pipe(
       commands,
-      RA.reduce(emptyPosition, reducer),
-      ({ horizontal, depth }) => horizontal * depth
+      RA.map(positionFromCommand),
+      M.concatAll(monoidPosition),
+      sumPosition
     )
+  )
+)
+
+/** "parallel" version */
+export const main3 = pipe(
+  readInput('input/2', Input),
+  TE.chainTaskK((commands) =>
+    pipe(
+      commands,
+      RA.traverse(T.ApplicativePar)((command) =>
+        T.of(positionFromCommand(command))
+      )
+    )
+  ),
+  TE.map((positions) =>
+    pipe(positions, M.concatAll(monoidPosition), sumPosition)
   )
 )
