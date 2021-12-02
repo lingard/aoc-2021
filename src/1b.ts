@@ -2,17 +2,12 @@ import { constant, pipe } from 'fp-ts/lib/function'
 import * as RA from 'fp-ts/ReadonlyArray'
 import * as TE from 'fp-ts/TaskEither'
 import * as E from 'fp-ts/Either'
-import * as D from 'io-ts/Decoder'
 import * as M from 'fp-ts/Monoid'
 import * as n from 'fp-ts/number'
 import * as b from 'fp-ts/boolean'
 
 import { AppError, readFile } from './util'
 import { increases, Input } from './1a'
-
-export const SlidingWindow = D.tuple(D.number, D.number, D.number)
-
-export type SlidingWindow = D.TypeOf<typeof SlidingWindow>
 
 const chopN = (n: number) => (i: Input) =>
   pipe(
