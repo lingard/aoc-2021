@@ -7,7 +7,6 @@ import * as D from 'io-ts/Decoder'
 import * as Lens from 'monocle-ts/Lens'
 import * as M from 'fp-ts/Monoid'
 import * as n from 'fp-ts/number'
-import { getStructMonoid } from 'fp-ts/lib/Monoid'
 import { NumberFromString, readInput } from './util'
 
 export const Command = Union({
@@ -88,7 +87,7 @@ export const main = pipe(
 // monoid version
 // -------------------------------------------------------------------------------------
 
-const monoidPosition = getStructMonoid<Position>({
+const monoidPosition = M.struct<Position>({
   depth: n.MonoidSum,
   horizontal: n.MonoidSum,
 })
